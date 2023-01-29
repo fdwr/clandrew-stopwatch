@@ -28,3 +28,5 @@ The project is in C++, built with Visual Studio 2019. The x86 build is supported
 
 ## System requirements
 This application has been tested on Windows 10 on an x86-64 based computer. It is likely to work on other versions of Windows that have x86 application compatibility.
+
+Windows Defender Smartscreen may complain about this application because it is not commonly downloaded. Smartscreen works in part using [telemetry](https://learn.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-smartscreen/microsoft-defender-smartscreen-overview) and random executables that aren't blessed by the telemetry can be flagged. You can still run applications that are flagged by Smartscreen if you trust and understand them. Or you can get the source code, build them and run them.
