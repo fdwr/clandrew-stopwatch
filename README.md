@@ -21,6 +21,8 @@ Looks like this:
 
 If timing is happening, a dot appears beside the timer.
 
+The timing goes up to 1 hour, then resets automatically.
+
 ## Build
 The project is in C++, built with Visual Studio 2019. The x86 build is supported.
 
