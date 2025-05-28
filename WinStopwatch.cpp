@@ -1,12 +1,18 @@
+﻿#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <SDKDDKVer.h>
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
+#include <windowsx.h>
 #include "resource.h"
 
-int g_seconds = 0;
-int g_minutes = 0;
-HWND g_hDlg = NULL;
-HWND g_hDot = NULL;
+unsigned int g_accumulatedTickCount = 0; // Any previous accumulated time before pausing.
+unsigned int g_startTickCount = 0; // Last start time (set to GetTickCount).
+unsigned int g_timerInterval = 0;
+constexpr unsigned int g_defaultTimerInterval = 1000;
+
+HWND g_hDlg = nullptr;
+HWND g_hDot = nullptr;
+HFONT g_hTimeFont = nullptr;
+bool g_isTimerActive = false;
 
 INT_PTR CALLBACK DialogMessageHandler(HWND, UINT, WPARAM, LPARAM);
 
@@ -16,75 +22,102 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     return TRUE;
 }
 
-void TwoDigitItoa(int n, char* pBuf, int* pDestIndex)
+void TwoDigitItoa(unsigned int n, char buffer[2])
 {
-    int high{};
-    int low{};
-
-    if (n >= 10)
-    {
-        high = n / 10;
-        low = n % 10;
-
-    }
-    else
-    {
-        high = 0;
-        low = n;
-    }
-
-    pBuf[*pDestIndex] = '0' + high;
-    (*pDestIndex)++;
-
-    pBuf[*pDestIndex] = '0' + low;
-    (*pDestIndex)++;
-
+    buffer[0] = '0' + n / 10;
+    buffer[1] = '0' + n % 10;
 }
 
 void UpdateDisplayedText()
 {
-    char buf[32]{};
-    int destIndex = 0;
+    unsigned int totalTickCount = g_accumulatedTickCount;
 
-    TwoDigitItoa(g_minutes, buf, &destIndex);
+    char buffer[9] = {'0','0',':','0','0',':','0','0','\0'};
 
-    buf[destIndex] = ':';
-    destIndex++;
+    unsigned int seconds = totalTickCount / 1000;
+    unsigned int minutes = seconds / 60;
+    unsigned int hours   = minutes / 60;
+    seconds %= 60;
+    minutes %= 60;
 
-    TwoDigitItoa(g_seconds, buf, &destIndex);
+    TwoDigitItoa(hours,   &buffer[0]);
+    TwoDigitItoa(minutes, &buffer[3]);
+    TwoDigitItoa(seconds, &buffer[6]);
 
-    buf[destIndex] = '\0';
-    destIndex++;
-
-    SetDlgItemTextA(g_hDlg, IDC_EDIT1, buf);
-}
-
-VOID CALLBACK TimerProc(
-    HWND hwnd,        // handle to window for timer messages 
-    UINT message,     // WM_TIMER message 
-    UINT idTimer,     // timer identifier 
-    DWORD dwTime)     // current system time 
-{
-    g_seconds++;
-    if (g_seconds >= 60)
-    {
-        g_seconds = 0;
-
-        g_minutes++;
-        if (g_minutes >= 60) // Timer only goes up to 60 minutes, then automatically stops
-        {
-            g_minutes = 0;
-            ShowWindow(g_hDot, SW_HIDE);
-            KillTimer(g_hDlg, 0);
-        }
-    }
-    UpdateDisplayedText();
+    SetDlgItemTextA(g_hDlg, IDC_EDIT1, buffer);
 }
 
 void ZeroTime()
 {
-    g_seconds = 0;
-    g_minutes = 0;
+    g_accumulatedTickCount = 0;
+}
+
+void ResetStartTickCount()
+{
+    g_startTickCount = GetTickCount();
+}
+
+void AccumulateTickCount()
+{
+    unsigned int currentTickCount = GetTickCount();
+    g_accumulatedTickCount += currentTickCount - g_startTickCount;
+    g_startTickCount = currentTickCount;
+}
+
+VOID CALLBACK TimerProc(
+    HWND hwnd,          // handle to window for timer messages 
+    UINT message,       // WM_TIMER message 
+    UINT_PTR idTimer,   // timer identifier 
+    DWORD dwTime        // current system time 
+)     
+{
+    AccumulateTickCount();
+    if (g_timerInterval != g_defaultTimerInterval)
+    {
+        SetTimer(g_hDlg, 0, g_defaultTimerInterval, &TimerProc);
+        g_timerInterval = g_defaultTimerInterval;
+    }
+    UpdateDisplayedText();
+}
+
+void StopTimer()
+{
+    if (g_isTimerActive)
+    {
+        g_isTimerActive = false;
+        AccumulateTickCount();
+
+        KillTimer(g_hDlg, 0);
+
+        SetWindowText(g_hDot, L"⏹️");
+    }
+}
+
+void StartTimer()
+{
+    if (!g_isTimerActive)
+    {
+        g_isTimerActive = true;
+        g_startTickCount = GetTickCount();
+        g_timerInterval = 1000 - (g_accumulatedTickCount % 1000);
+
+        SetTimer(g_hDlg, 0, g_timerInterval, &TimerProc);
+
+        SetWindowText(g_hDot, L"▶️");
+        UpdateDisplayedText();
+    }
+    else
+    {
+        StopTimer();
+    }
+}
+
+void ResetTimer()
+{
+    ZeroTime();
+    ResetStartTickCount();
+    SetTimer(g_hDlg, 0, g_defaultTimerInterval, &TimerProc);
+    UpdateDisplayedText();
 }
 
 INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -94,11 +127,15 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
     {
         case WM_INITDIALOG:
         {
-            ZeroTime();
             g_hDlg = hDlg;
             g_hDot = GetDlgItem(g_hDlg, IDC_DOT);
-            ShowWindow(g_hDot, SW_HIDE);
+
+            HWND timeWindow = GetDlgItem(g_hDlg, IDC_EDIT1);
+            g_hTimeFont = CreateFont(44, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
+            SetWindowFont(timeWindow, g_hTimeFont, FALSE);
+            SetWindowFont(g_hDot, g_hTimeFont, FALSE);
             UpdateDisplayedText();
+
             return (INT_PTR)TRUE;
         }
 
@@ -107,27 +144,23 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             int id = LOWORD(wParam);
             if (id == IDC_START)
             {
-                ShowWindow(g_hDot, SW_SHOW);
-                SetTimer(hDlg, 0, 1000, TimerProc);
+                StartTimer();
             }
             else if (id == IDC_STOP)
             {
-                ShowWindow(g_hDot, SW_HIDE);
-                KillTimer(hDlg, 0);
+                StopTimer();
             }
             else if (id == IDC_RESET)
             {
-                ShowWindow(g_hDot, SW_HIDE);
-                ZeroTime();
-                UpdateDisplayedText();
-                KillTimer(hDlg, 0);
+                ResetTimer();
+                
             }
             break;
         }
         case WM_CLOSE:
         {
             EndDialog(hDlg, LOWORD(wParam));
-            g_hDlg = NULL;
+            g_hDlg = nullptr;
             return (INT_PTR)TRUE;
         }
     }
