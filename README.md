@@ -13,18 +13,16 @@ Looks like this:
 
 **How to use**: there are three buttons, "Start", "Stop", and "Reset".
 
-**Start:** Starts the timer.
+**Start:** Starts the timer, or pauses it if already running.
 
-**Stop:** Stops, or pauses, the timer. From there, you can either resume timing with the Start button or clear it with the Reset button.
+**Stop:** Stops (or rather pauses) the timer. Then you can either resume timing with the Start button or clear it with the Reset button.
 
-**Reset:** Stops the timer and clears the time back to 0.
+**Reset:** Reset the time back to 0, and the timer continues if it was already running.
 
-If timing is happening, a dot appears beside the timer.
-
-The timing goes up to 1 hour, then resets automatically.
+If timing is happening, a play symbol appears beside the timer.
 
 ## Build
-The project is in C++, built with Visual Studio 2019. The x86 build is supported.
+The project is in C++, built with Visual Studio 2022. Both x86 and x64 builds work.
 
 ## System requirements
 This application has been tested on Windows 10 on an x86-64 based computer. It is likely to work on other versions of Windows that have x86 application compatibility.
