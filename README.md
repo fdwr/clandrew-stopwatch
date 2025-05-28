@@ -9,7 +9,7 @@ Features:
 
 Looks like this:
 
-![Image](https://raw.githubusercontent.com/clandrew/stopwatch/main/Images/Screenshot.png "Image")
+![Image](Images/Screenshot.png "Program screenshot")
 
 **How to use**: there are three buttons, "Start", "Stop", and "Reset".
 
