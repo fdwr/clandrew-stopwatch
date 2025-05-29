@@ -130,10 +130,25 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             g_hDlg = hDlg;
             g_hDot = GetDlgItem(g_hDlg, IDC_DOT);
 
+            // Get screen dimensions.
+            int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+            int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+            // Compute new dialog position.
+            RECT rect;
+            GetWindowRect(g_hDlg, &rect);
+            int dialogWidth = rect.right - rect.left;
+            int dialogHeight = rect.bottom - rect.top;
+            int dialogX = (screenWidth - dialogWidth) / 2;
+            int dialogY = (screenHeight - dialogHeight) / 2;
+            SetWindowPos(g_hDlg, nullptr, dialogX, dialogY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+
+            // Set label font.
             HWND timeWindow = GetDlgItem(g_hDlg, IDC_EDIT1);
             g_hTimeFont = CreateFont(44, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
             SetWindowFont(timeWindow, g_hTimeFont, FALSE);
             SetWindowFont(g_hDot, g_hTimeFont, FALSE);
+
             UpdateDisplayedText();
 
             return (INT_PTR)TRUE;
@@ -157,6 +172,7 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             }
             break;
         }
+
         case WM_CLOSE:
         {
             EndDialog(hDlg, LOWORD(wParam));
