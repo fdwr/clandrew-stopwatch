@@ -21,6 +21,19 @@ Looks like this:
 
 If timing is happening, a play symbol appears beside the timer.
 
+## Changes
+
+The following changes were made from https://github.com/clandrew/stopwatch:
+
+- Timer label has bigger numbers for visibility.
+- Buttons are larger hit targets.
+- Hours displayed (limited to 99 hours).
+- Clicking Start again pauses it.
+- Clicking Reset only resets the time if already running (does not also stop it).
+- Enter/Escape keys start/stop/reset it.
+- Tab order fixed.
+- Fractional time amounts are preserved when you pause/resume.
+
 ## Build
 The project is in C++, built with Visual Studio 2022. Both x86 and x64 builds work.
 
