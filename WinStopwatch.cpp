@@ -89,7 +89,7 @@ void StopTimer()
 
         KillTimer(g_hDlg, 0);
 
-        SetWindowText(g_hDot, L"⏹️");
+        SetWindowText(g_hDot, L"⏸️");
     }
 }
 
@@ -116,7 +116,14 @@ void ResetTimer()
 {
     ZeroTime();
     ResetStartTickCount();
-    SetTimer(g_hDlg, 0, g_defaultTimerInterval, &TimerProc);
+    if (g_isTimerActive)
+    {
+        SetTimer(g_hDlg, 0, g_defaultTimerInterval, &TimerProc);
+    }
+    else
+    {
+        SetWindowText(g_hDot, L"⏹️");
+    }
     UpdateDisplayedText();
 }
 
@@ -157,7 +164,7 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
         case WM_COMMAND:
         {
             int id = LOWORD(wParam);
-            if (id == IDC_START)
+            if (id == IDC_START || id == IDOK)
             {
                 StartTimer();
             }
@@ -168,7 +175,13 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             else if (id == IDC_RESET)
             {
                 ResetTimer();
-                
+            }
+            else if (id == IDCANCEL)
+            {
+                if (g_isTimerActive)
+                    StopTimer();
+                else
+                    ResetTimer();
             }
             break;
         }
