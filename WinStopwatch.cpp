@@ -14,6 +14,7 @@ HWND g_hState = nullptr;
 HWND g_hLogo = nullptr;
 HFONT g_hTimeFont = nullptr;
 bool g_isTimerActive = false;
+bool g_isUpdatingTimeEdit = false;
 
 INT_PTR CALLBACK DialogMessageHandler(HWND, UINT, WPARAM, LPARAM);
 
@@ -23,18 +24,32 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     return TRUE;
 }
 
-void TwoDigitItoa(unsigned int n, char buffer[2])
+void TwoDigitItoa(unsigned int n, wchar_t buffer[2])
 {
     buffer[0] = '0' + n / 10;
     buffer[1] = '0' + n % 10;
 }
 
+template <typename T>
+T ValueOrZero(T value, T minimum, T maximum)
+{
+    return (value >= minimum && value <= maximum) ? value : T(0);
+}
+
+unsigned int TwoDigitAtoi(wchar_t buffer[2])
+{
+    unsigned int first  = ValueOrZero(buffer[0] - '0', 0, 9);
+    unsigned int second = ValueOrZero(buffer[1] - '0', 0, 9);
+    return first * 10 + second;
+}
+
 void UpdateDisplayedText()
 {
+    g_isUpdatingTimeEdit = true;
+
+    wchar_t buffer[9] = {'0','0',':','0','0',':','0','0','\0'};
+
     unsigned int totalTickCount = g_accumulatedTickCount;
-
-    char buffer[9] = {'0','0',':','0','0',':','0','0','\0'};
-
     unsigned int seconds = totalTickCount / 1000;
     unsigned int minutes = seconds / 60;
     unsigned int hours   = minutes / 60;
@@ -49,8 +64,23 @@ void UpdateDisplayedText()
     DWORD caretStart, caretEnd;
     HWND editHwnd = GetDlgItem(g_hDlg, IDC_TIME);
     SendMessage(editHwnd, EM_GETSEL, (WPARAM)&caretStart, (LPARAM)&caretEnd);
-    SetWindowTextA(editHwnd, buffer);
+    SetWindowText(editHwnd, buffer);
     SendMessage(editHwnd, EM_SETSEL, caretStart, caretEnd);
+
+    g_isUpdatingTimeEdit = false;
+}
+
+void ReadTimeText()
+{
+    HWND editHwnd = GetDlgItem(g_hDlg, IDC_TIME);
+
+    wchar_t buffer[10] = {};
+    Edit_GetText(editHwnd, buffer, ARRAYSIZE(buffer));
+
+    unsigned int seconds = TwoDigitAtoi(&buffer[0]) * 60 * 60
+                         + TwoDigitAtoi(&buffer[3]) * 60
+                         + TwoDigitAtoi(&buffer[6]);
+    g_accumulatedTickCount = seconds * 1000;
 }
 
 void ZeroTime()
@@ -190,6 +220,16 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
                     StopTimer();
                 else
                     ResetTimer();
+            }
+            else if (wParam == ((EN_CHANGE << 16) | IDC_TIME))
+            {
+                if (!g_isUpdatingTimeEdit) // // Don't react to an update cause by setting the text programmatically.
+                {
+                    g_isUpdatingTimeEdit = true; // Tis silly that EN_CHANGE occurs when programmatically set too :/.
+                    ReadTimeText();
+                    UpdateDisplayedText();
+                    g_isUpdatingTimeEdit = false;
+                }
             }
             break;
         }
