@@ -8,3 +8,4 @@
 #define IDC_TIME                        1002
 #define IDC_STOP                        1003
 #define IDC_STATE                       1004
+#define IDC_LOGO                        1005

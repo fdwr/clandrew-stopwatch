@@ -11,6 +11,7 @@ constexpr unsigned int g_defaultTimerInterval = 1000;
 
 HWND g_hDlg = nullptr;
 HWND g_hState = nullptr;
+HWND g_hLogo = nullptr;
 HFONT g_hTimeFont = nullptr;
 bool g_isTimerActive = false;
 
@@ -136,6 +137,7 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
         {
             g_hDlg = hDlg;
             g_hState = GetDlgItem(g_hDlg, IDC_STATE);
+            g_hLogo = GetDlgItem(g_hDlg, IDC_LOGO);
 
             // Get screen dimensions.
             int screenWidth = GetSystemMetrics(SM_CXSCREEN);
@@ -155,6 +157,7 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             g_hTimeFont = CreateFont(44, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
             SetWindowFont(timeWindow, g_hTimeFont, FALSE);
             SetWindowFont(g_hState, g_hTimeFont, FALSE);
+            SetWindowFont(g_hLogo, g_hTimeFont, FALSE);
 
             UpdateDisplayedText();
 
