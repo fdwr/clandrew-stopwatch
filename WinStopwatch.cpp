@@ -62,7 +62,7 @@ void UpdateDisplayedText()
 VOID CALLBACK TimerProc(
     HWND hwnd,        // handle to window for timer messages 
     UINT message,     // WM_TIMER message 
-    UINT_PTR idTimer,     // timer identifier 
+    UINT_PTR idTimer, // timer identifier 
     DWORD dwTime)     // current system time 
 {
     g_seconds++;
