@@ -33,6 +33,7 @@ The following changes were made from https://github.com/clandrew/stopwatch:
 - Enter/Escape keys start/stop/reset it.
 - Tab order fixed.
 - Fractional time amounts are preserved when you pause/resume.
+- Center dialog in screen rather than top left.
 
 ## Build
 The project is in C++, built with Visual Studio 2022. Both x86 and x64 builds work.
