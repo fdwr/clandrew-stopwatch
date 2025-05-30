@@ -2,6 +2,7 @@
 #include <SDKDDKVer.h>
 #include <windows.h>
 #include <windowsx.h>
+#include <commctrl.h>
 #include "resource.h"
 
 unsigned int g_accumulatedTickCount = 0; // Any previous accumulated time before pausing.
@@ -10,6 +11,7 @@ unsigned int g_timerInterval = 0;
 constexpr unsigned int g_defaultTimerInterval = 1000;
 
 HWND g_hDlg = nullptr;
+HWND g_hTimeEdit = nullptr;
 HWND g_hState = nullptr;
 HWND g_hLogo = nullptr;
 HFONT g_hTimeFont = nullptr;
@@ -116,6 +118,69 @@ VOID CALLBACK TimerProc(
     UpdateDisplayedText();
 }
 
+bool SimulateEditOverstrikeMode(HWND hWnd, unsigned int negativeCaretAdjustment)
+{
+    unsigned int caretRange = Edit_GetSel(hWnd);
+    unsigned int caretBegin = LOWORD(caretRange);
+    unsigned int caretEnd   = HIWORD(caretRange);
+    if (caretEnd == caretBegin)
+    {
+        unsigned int textLength = Edit_GetTextLength(hWnd);
+        caretBegin = (negativeCaretAdjustment < caretBegin) ? caretBegin - negativeCaretAdjustment : 0;
+        caretBegin = (caretBegin >= textLength && textLength > 0) ? textLength - 1 : caretBegin;
+        if (caretBegin < textLength)
+        {
+            Edit_SetSel(hWnd, caretBegin, caretBegin + 1);
+            caretEnd = caretBegin + 1;
+        }
+    }
+    return caretEnd != caretBegin;
+}
+
+LRESULT CALLBACK TimeEditProc(
+    HWND hwnd,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam,
+    UINT_PTR uIdSubclass,
+    DWORD_PTR dwRefData
+)
+{
+    switch (uMsg)
+    {
+    case WM_CHAR:
+        if ((wParam >= '0' && wParam <= '9') || (wParam  == ':'))
+        {
+            SimulateEditOverstrikeMode(hwnd, 0);
+            DefSubclassProc(hwnd, uMsg, wParam, lParam);
+            SimulateEditOverstrikeMode(hwnd, 0);
+        }
+        else if (wParam < 32 && wParam != 8)
+        {
+            // Pressing Ctrl+C or Ctrl+V generate control characters (Ctrl+C = 3, Ctrl+V = 22),
+            // and these must be permitted through, or else copy and paste do not work, since
+            // the edit control heeds these rather than the WM_KEYDOWN message. So let every
+            // control character through except for backspace.
+            return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+        }
+        // Ignore any other characters.
+        return 0;
+
+    case WM_KEYDOWN:
+        if (wParam == VK_BACK || wParam == VK_DELETE)
+        {
+            if (SimulateEditOverstrikeMode(hwnd, wParam == VK_BACK ? 1 : 0))
+            {
+                DefSubclassProc(hwnd, WM_CHAR, '0', 1);
+                SimulateEditOverstrikeMode(hwnd, wParam == VK_BACK ? 2 : 0);
+            }
+            return 0;
+        }
+        break;
+    } 
+    return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+}
+
 void StopTimer()
 {
     if (g_isTimerActive)
@@ -173,6 +238,7 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             g_hDlg = hDlg;
             g_hState = GetDlgItem(g_hDlg, IDC_STATE);
             g_hLogo = GetDlgItem(g_hDlg, IDC_LOGO);
+            g_hTimeEdit = GetDlgItem(g_hDlg, IDC_TIME);
 
             // Get screen dimensions.
             int screenWidth = GetSystemMetrics(SM_CXSCREEN);
@@ -188,13 +254,14 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             SetWindowPos(g_hDlg, nullptr, dialogX, dialogY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 
             // Set label font.
-            HWND timeWindow = GetDlgItem(g_hDlg, IDC_TIME);
             g_hTimeFont = CreateFont(44, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
-            SetWindowFont(timeWindow, g_hTimeFont, FALSE);
+            SetWindowFont(g_hTimeEdit, g_hTimeFont, FALSE);
             SetWindowFont(g_hState, g_hTimeFont, FALSE);
             SetWindowFont(g_hLogo, g_hTimeFont, FALSE);
 
             UpdateDisplayedText();
+
+            SetWindowSubclass(g_hTimeEdit, &TimeEditProc, 0, 0);
 
             return (INT_PTR)TRUE;
         }
@@ -239,6 +306,12 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             EndDialog(hDlg, LOWORD(wParam));
             g_hDlg = nullptr;
             return (INT_PTR)TRUE;
+        }
+
+        case WM_DESTROY:
+        {
+            RemoveWindowSubclass(g_hTimeEdit, &TimeEditProc, 0);
+            return 0;
         }
     }
     return (INT_PTR)FALSE;
