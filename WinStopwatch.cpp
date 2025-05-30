@@ -45,7 +45,12 @@ void UpdateDisplayedText()
     TwoDigitItoa(minutes, &buffer[3]);
     TwoDigitItoa(seconds, &buffer[6]);
 
-    SetDlgItemTextA(g_hDlg, IDC_TIME, buffer);
+    // Update text (without messing up the caret position, in case user is selecting it).
+    DWORD caretStart, caretEnd;
+    HWND editHwnd = GetDlgItem(g_hDlg, IDC_TIME);
+    SendMessage(editHwnd, EM_GETSEL, (WPARAM)&caretStart, (LPARAM)&caretEnd);
+    SetWindowTextA(editHwnd, buffer);
+    SendMessage(editHwnd, EM_SETSEL, caretStart, caretEnd);
 }
 
 void ZeroTime()
