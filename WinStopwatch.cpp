@@ -10,7 +10,7 @@ unsigned int g_timerInterval = 0;
 constexpr unsigned int g_defaultTimerInterval = 1000;
 
 HWND g_hDlg = nullptr;
-HWND g_hDot = nullptr;
+HWND g_hState = nullptr;
 HFONT g_hTimeFont = nullptr;
 bool g_isTimerActive = false;
 
@@ -18,7 +18,7 @@ INT_PTR CALLBACK DialogMessageHandler(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
-    DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG1), nullptr, DialogMessageHandler);
+    DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG), nullptr, DialogMessageHandler);
     return TRUE;
 }
 
@@ -44,7 +44,7 @@ void UpdateDisplayedText()
     TwoDigitItoa(minutes, &buffer[3]);
     TwoDigitItoa(seconds, &buffer[6]);
 
-    SetDlgItemTextA(g_hDlg, IDC_EDIT1, buffer);
+    SetDlgItemTextA(g_hDlg, IDC_TIME, buffer);
 }
 
 void ZeroTime()
@@ -89,7 +89,7 @@ void StopTimer()
 
         KillTimer(g_hDlg, 0);
 
-        SetWindowText(g_hDot, L"⏸️");
+        SetWindowText(g_hState, L"⏸️");
     }
 }
 
@@ -103,7 +103,7 @@ void StartTimer()
 
         SetTimer(g_hDlg, 0, g_timerInterval, &TimerProc);
 
-        SetWindowText(g_hDot, L"▶️");
+        SetWindowText(g_hState, L"▶️");
         UpdateDisplayedText();
     }
     else
@@ -122,7 +122,7 @@ void ResetTimer()
     }
     else
     {
-        SetWindowText(g_hDot, L"⏹️");
+        SetWindowText(g_hState, L"⏹️");
     }
     UpdateDisplayedText();
 }
@@ -135,7 +135,7 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
         case WM_INITDIALOG:
         {
             g_hDlg = hDlg;
-            g_hDot = GetDlgItem(g_hDlg, IDC_DOT);
+            g_hState = GetDlgItem(g_hDlg, IDC_STATE);
 
             // Get screen dimensions.
             int screenWidth = GetSystemMetrics(SM_CXSCREEN);
@@ -151,10 +151,10 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             SetWindowPos(g_hDlg, nullptr, dialogX, dialogY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 
             // Set label font.
-            HWND timeWindow = GetDlgItem(g_hDlg, IDC_EDIT1);
+            HWND timeWindow = GetDlgItem(g_hDlg, IDC_TIME);
             g_hTimeFont = CreateFont(44, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
             SetWindowFont(timeWindow, g_hTimeFont, FALSE);
-            SetWindowFont(g_hDot, g_hTimeFont, FALSE);
+            SetWindowFont(g_hState, g_hTimeFont, FALSE);
 
             UpdateDisplayedText();
 
