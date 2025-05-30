@@ -62,7 +62,7 @@ void UpdateDisplayedText()
 VOID CALLBACK TimerProc(
     HWND hwnd,        // handle to window for timer messages 
     UINT message,     // WM_TIMER message 
-    UINT idTimer,     // timer identifier 
+    UINT_PTR idTimer,     // timer identifier 
     DWORD dwTime)     // current system time 
 {
     g_seconds++;
@@ -108,7 +108,7 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             if (id == IDC_START)
             {
                 ShowWindow(g_hDot, SW_SHOW);
-                SetTimer(hDlg, 0, 1000, TimerProc);
+                SetTimer(hDlg, 0, 1000, &TimerProc);
             }
             else if (id == IDC_STOP)
             {
