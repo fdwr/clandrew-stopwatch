@@ -1,13 +1,14 @@
 # Stopwatch
 Very barebones Win32 application for when I need a stopwatch.
 
-Features:
+### Features
+
 * Graphical interface
 * Counts up in seconds
 * Convenient 10kb stand-alone executable with small memory footprint
 * Fast to start up and shut down; no web browser, no log-in, does not rely on complicated application frameworks
 
-Looks like this:
+### Screenshot
 
 ![Image](Images/Screenshot.png "Program screenshot")
 
