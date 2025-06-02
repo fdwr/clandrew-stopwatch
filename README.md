@@ -32,7 +32,6 @@ The following changes were made from https://github.com/clandrew/stopwatch:
 - Clicking Start again pauses it.
 - Clicking Reset only resets the time if already running (does not also stop it).
 - Enter/Escape keys start/stop/reset it.
-- Tab order fixed.
 - Fractional time amounts are preserved when you pause/resume.
 - Center dialog in screen rather than top left.
 
