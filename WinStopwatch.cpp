@@ -304,6 +304,7 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
         case WM_CLOSE:
         {
             EndDialog(hDlg, LOWORD(wParam));
+            DeleteFont(g_hTimeFont);
             g_hDlg = nullptr;
             return (INT_PTR)TRUE;
         }
