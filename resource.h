@@ -3,6 +3,7 @@
 // Used by WinStopwatch.rc
 //
 #define IDD_DIALOG                      129
+#define IDI_ICONMAIN                    1
 #define IDC_START                       1000
 #define IDC_RESET                       1001
 #define IDC_TIME                        1002

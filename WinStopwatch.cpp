@@ -253,6 +253,10 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             int dialogY = (screenHeight - dialogHeight) / 2;
             SetWindowPos(g_hDlg, nullptr, dialogX, dialogY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 
+            // Set icon.
+            HICON icon = (HICON)LoadImage(GetModuleHandle(nullptr), MAKEINTRESOURCEW(IDI_ICONMAIN), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR | LR_DEFAULTSIZE);
+            SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)icon);
+
             // Set label font.
             g_hTimeFont = CreateFont(44, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
             SetWindowFont(g_hTimeEdit, g_hTimeFont, FALSE);
