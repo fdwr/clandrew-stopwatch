@@ -10,3 +10,5 @@
 #define IDC_STOP                        1003
 #define IDC_STATE                       1004
 #define IDC_LOGO                        1005
+#define IDM_TOGGLE_TRANSPARENCY         1006
+#define IDM_TOGGLE_ALWAYS_ON_TOP        1007

@@ -5,6 +5,10 @@
 #include <commctrl.h>
 #include "resource.h"
 
+#ifndef SetWindowExStyle
+#define SetWindowExStyle(hwnd, value)  ((DWORD)SetWindowLong(hwnd, GWL_EXSTYLE, value))
+#endif
+
 unsigned int g_accumulatedTickCount = 0; // Any previous accumulated time before pausing.
 unsigned int g_startTickCount = 0; // Last start time (set to GetTickCount).
 unsigned int g_timerInterval = 0;
@@ -228,6 +232,25 @@ void ResetTimer()
     UpdateDisplayedText();
 }
 
+void SetWindowTranslucency(HWND windowHandle, unsigned int alpha)
+{
+    unsigned int previousExStyle = GetWindowExStyle(windowHandle);
+    if (alpha >= 255) // Opaque.
+    {
+        SetWindowExStyle(windowHandle, previousExStyle & ~WS_EX_LAYERED);
+    }
+    else // Translucent.
+    {
+        SetWindowExStyle(windowHandle, previousExStyle | WS_EX_LAYERED);
+        SetLayeredWindowAttributes(
+            windowHandle,
+            0,
+            alpha,
+            LWA_ALPHA
+        );
+    }
+}
+
 INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
@@ -267,6 +290,16 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
 
             SetWindowSubclass(g_hTimeEdit, &TimeEditProc, 0, 0);
 
+            HMENU systemMenu = GetSystemMenu(g_hDlg, FALSE);
+            if (systemMenu)
+            {
+                InsertMenu(systemMenu, 0, MF_BYPOSITION | MF_STRING, IDM_TOGGLE_TRANSPARENCY, L"Toggle Transparency");
+                InsertMenu(systemMenu, 0, MF_BYPOSITION | MF_STRING, IDM_TOGGLE_ALWAYS_ON_TOP, L"Toggle Always On Top");
+                //InsertMenu(systemMenu, 1, MF_BYPOSITION | MF_STRING, ID_SHOW_MESSAGE2, 
+                //             "Show Message 2");
+                //::InsertMenu(systemMenu, 2, MF_BYPOSITION | MF_SEPARATOR, 0, "");
+            }
+
             return (INT_PTR)TRUE;
         }
 
@@ -301,6 +334,21 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
                     UpdateDisplayedText();
                     g_isUpdatingTimeEdit = false;
                 }
+            }
+            break;
+        }
+
+        case WM_SYSCOMMAND:
+        {
+            int id = LOWORD(wParam);
+            if (wParam == IDM_TOGGLE_TRANSPARENCY)
+            {
+                SetWindowTranslucency(hDlg, (GetWindowExStyle(hDlg) & WS_EX_LAYERED) ? 255 : 164);
+            }
+            else if (wParam == IDM_TOGGLE_ALWAYS_ON_TOP)
+            {
+                bool isTopmost = GetWindowExStyle(hDlg) & WS_EX_TOPMOST;
+                SetWindowPos(hDlg, isTopmost ? HWND_NOTOPMOST : HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
             }
             break;
         }
