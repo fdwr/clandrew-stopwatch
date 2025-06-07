@@ -305,27 +305,29 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
         case WM_COMMAND:
         {
             int id = LOWORD(wParam);
-            if (id == IDC_START || id == IDOK)
+            if (HIWORD(wParam) == 1) // Accelerator pressed.
             {
+                wParam &= 0xFFFF; // Ignore accelerator vs menu difference.
+            }
+            switch (wParam)
+            {
+            case IDC_START:
+            case IDOK:
                 StartTimer();
-            }
-            else if (id == IDC_STOP)
-            {
+                break;
+            case IDC_STOP:
                 StopTimer();
-            }
-            else if (id == IDC_RESET)
-            {
+                break;
+            case IDC_RESET:
                 ResetTimer();
-            }
-            else if (id == IDCANCEL)
-            {
+                break;
+            case IDCANCEL:
                 if (g_isTimerActive)
                     StopTimer();
                 else
                     ResetTimer();
-            }
-            else if (wParam == ((EN_CHANGE << 16) | IDC_TIME))
-            {
+                break;
+            case ((EN_CHANGE << 16) | IDC_TIME):
                 if (!g_isUpdatingTimeEdit) // // Don't react to an update cause by setting the text programmatically.
                 {
                     g_isUpdatingTimeEdit = true; // Tis silly that EN_CHANGE occurs when programmatically set too :/.
@@ -333,28 +335,27 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
                     UpdateDisplayedText();
                     g_isUpdatingTimeEdit = false;
                 }
+                break;
             }
             break;
         }
-
         case WM_SYSCOMMAND:
-        {
-            int id = LOWORD(wParam);
-            if (wParam == IDM_TOGGLE_TRANSPARENCY)
+            switch (wParam)
             {
+            case IDM_TOGGLE_TRANSPARENCY:
                 SetWindowTranslucency(hDlg, (GetWindowExStyle(hDlg) & WS_EX_LAYERED) ? 255 : 164);
-            }
-            else if (wParam == IDM_TOGGLE_ALWAYS_ON_TOP)
+                break;
+            case IDM_TOGGLE_ALWAYS_ON_TOP:
             {
                 bool isTopmost = GetWindowExStyle(hDlg) & WS_EX_TOPMOST;
                 SetWindowPos(hDlg, isTopmost ? HWND_NOTOPMOST : HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+                break;
             }
-            else if (wParam == IDM_MINIMIZE)
-            {
+            case IDM_MINIMIZE:
                 CloseWindow(hDlg);
+                break;
             }
             break;
-        }
 
         case WM_CLOSE:
         {
@@ -369,6 +370,6 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             RemoveWindowSubclass(g_hTimeEdit, &TimeEditProc, 0);
             return 0;
         }
-    }
+    } // switch
     return (INT_PTR)FALSE;
 }
