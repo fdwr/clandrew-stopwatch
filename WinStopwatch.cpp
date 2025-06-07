@@ -293,11 +293,10 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             HMENU systemMenu = GetSystemMenu(g_hDlg, FALSE);
             if (systemMenu)
             {
-                InsertMenu(systemMenu, 0, MF_BYPOSITION | MF_STRING, IDM_TOGGLE_TRANSPARENCY, L"Toggle Transparency");
-                InsertMenu(systemMenu, 0, MF_BYPOSITION | MF_STRING, IDM_TOGGLE_ALWAYS_ON_TOP, L"Toggle Always On Top");
-                //InsertMenu(systemMenu, 1, MF_BYPOSITION | MF_STRING, ID_SHOW_MESSAGE2, 
-                //             "Show Message 2");
-                //::InsertMenu(systemMenu, 2, MF_BYPOSITION | MF_SEPARATOR, 0, "");
+                InsertMenu(systemMenu, 0, MF_BYPOSITION | MF_STRING, IDM_MINIMIZE, L"Mi&nimize");
+                InsertMenu(systemMenu, 0, MF_BYPOSITION | MF_STRING, IDM_TOGGLE_ALWAYS_ON_TOP, L"Toggle &Always On Top");
+                InsertMenu(systemMenu, 0, MF_BYPOSITION | MF_STRING, IDM_TOGGLE_TRANSPARENCY, L"Toggle &Transparency");
+                InsertMenu(systemMenu, 2, MF_BYPOSITION | MF_SEPARATOR, 0, L"");
             }
 
             return (INT_PTR)TRUE;
@@ -349,6 +348,10 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             {
                 bool isTopmost = GetWindowExStyle(hDlg) & WS_EX_TOPMOST;
                 SetWindowPos(hDlg, isTopmost ? HWND_NOTOPMOST : HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+            }
+            else if (wParam == IDM_MINIMIZE)
+            {
+                CloseWindow(hDlg);
             }
             break;
         }

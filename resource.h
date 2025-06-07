@@ -12,3 +12,4 @@
 #define IDC_LOGO                        1005
 #define IDM_TOGGLE_TRANSPARENCY         1006
 #define IDM_TOGGLE_ALWAYS_ON_TOP        1007
+#define IDM_MINIMIZE                    1008
