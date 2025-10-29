@@ -32,6 +32,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 void TwoDigitItoa(unsigned int n, wchar_t buffer[2])
 {
+    n %= 100; // In case of overflow, just show last two digits.
     buffer[0] = '0' + n / 10;
     buffer[1] = '0' + n % 10;
 }
