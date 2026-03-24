@@ -19,6 +19,7 @@ HWND g_hTimeEdit = nullptr;
 HWND g_hState = nullptr;
 HWND g_hLogo = nullptr;
 HFONT g_hTimeFont = nullptr;
+HFONT g_hButtonFont = nullptr;
 bool g_isTimerActive = false;
 bool g_isUpdatingTimeEdit = false;
 
@@ -268,7 +269,7 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             int screenWidth = GetSystemMetrics(SM_CXSCREEN);
             int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-            // Compute new dialog position.
+            // Compute new dialog position. Otherwise it always opens at the top left corner, which is annoying.
             RECT rect;
             GetWindowRect(g_hDlg, &rect);
             int dialogWidth = rect.right - rect.left;
@@ -286,6 +287,10 @@ INT_PTR CALLBACK DialogMessageHandler(HWND hDlg, UINT message, WPARAM wParam, LP
             SetWindowFont(g_hTimeEdit, g_hTimeFont, FALSE);
             SetWindowFont(g_hState, g_hTimeFont, FALSE);
             SetWindowFont(g_hLogo, g_hTimeFont, FALSE);
+            g_hButtonFont = CreateFont(20, 0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, L"Segoe UI"); // It's been around since Vista. So, it should be safe.
+            SetWindowFont(GetDlgItem(g_hDlg, IDC_START), g_hButtonFont, FALSE);
+            SetWindowFont(GetDlgItem(g_hDlg, IDC_STOP), g_hButtonFont, FALSE);
+            SetWindowFont(GetDlgItem(g_hDlg, IDC_RESET), g_hButtonFont, FALSE);
 
             UpdateDisplayedText();
 
